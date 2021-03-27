@@ -1,7 +1,7 @@
 import React from 'react';
+import InputWithLabel from './InputWithLabel'
 
 const Search = ({ onSearch, search }) => {
-    console.log('search', search)
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const handleChange = (event) => {
@@ -10,13 +10,19 @@ const Search = ({ onSearch, search }) => {
   };
 
   return (
-    <div>
-      <label htmlFor="search">Search:</label>
-      <input id="search" type="text" value={search} onChange={handleChange} />
+    <>
+      <InputWithLabel
+        id="search"
+        onInputChange={handleChange}
+        value={searchTerm}
+        isFocused
+      >
+        <strong>Search</strong>
+      </InputWithLabel>
       <p>
-        Searching for <strong>{searchTerm}</strong>
+        Searching for <strong>{search}</strong>
       </p>
-    </div>
+    </>
   );
 };
 
