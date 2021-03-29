@@ -28,6 +28,8 @@ const App = () => {
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
   const [stories, setStories] = React.useState([])
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [isError, setIsError] = React.useState(false);
 
   const getAsyncStories = () => {
     return new Promise((resolve) => {
@@ -39,9 +41,16 @@ const App = () => {
   };
 
   React.useEffect(() => {
+    setIsLoading(true);
+
     getAsyncStories().then((result) => {
-     setStories(result.data.stories)
-   })
+      setStories(result.data.stories)
+     setIsLoading(false);
+    })
+      .catch((err) => {
+      setIsError(true)
+    })
+  
   },[])
     const handleSearch = (event) => {
         setSearchTerm(event.target.value)
@@ -57,15 +66,19 @@ const App = () => {
     const filteredStories = stories.filter((story) =>
         story.title.toLowerCase().includes(searchTerm.toLowerCase()))
  
-    return (
-      <Fragment>
-        <h1>My hacker stories</h1>
-
-        <Search search={searchTerm} onSearch={handleSearch} />
-        <hr />
-        <List stories={filteredStories} onRemoveItem={handleRemoveStory}/>
-      </Fragment>
-    );
+  return (
+    <Fragment>
+      <h1>My hacker stories</h1>
+      <Search search={searchTerm} onSearch={handleSearch} />
+      <hr />
+      {isError && <p>Something Went Wrong</p>}
+      {isLoading ? (
+        <p>....Loading</p>
+      ) : (
+          <List stories={filteredStories} onRemoveItem={handleRemoveStory} />
+      )}
+    </Fragment>
+  );
 };
 
 
