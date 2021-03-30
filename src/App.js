@@ -26,15 +26,45 @@ const App = () => {
 
   const storiesReducer = (state, action) => {
     switch (action.type) {
-      case 'SET_STORIES':
-        return action.payload;
-      
+      case "STORIES_FETCH_INIT":
+        return {
+          ...state,
+          isLoading: true,
+          isError: false,
+        };
+
+      case "STORIES_FETCH_SUCCESS":
+        return {
+          ...state,
+          data: action.payload,
+          isError: false,
+          isLoading: false,
+        };
+
+      case "STORIES_FETCH_FAILURE":
+        return {
+          ...state,
+          data: action.payload,
+          isError: true,
+          isLoading: false,
+        };
+
+      case "REMOVE_STORY":
+        return {
+          ...state,
+          data: state.data.filter((s) => s.objectID !== action.payload.objectID)
+        }
+
       default:
+        console.log("action.type", action.type);
         throw new Error();
     }
 }
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [stories, dispatch] = React.useReducer(storiesReducer ,[])
+  const [stories, dispatch] = React.useReducer(
+    storiesReducer,
+    { data: [], isLoading: false, isError: false })
+  
   const [isLoading, setIsLoading] = React.useState(false)
   const [isError, setIsError] = React.useState(false);
 
@@ -48,14 +78,13 @@ const App = () => {
   };
 
   React.useEffect(() => {
-    setIsLoading(true);
+   dispatch({type: 'STORIES_FETCH_INIT'})
 
     getAsyncStories().then((result) => {
-      dispatch({type: 'SET_STORIES', payload: initialStories})
-     setIsLoading(false);
+      dispatch({ type: 'STORIES_FETCH_SUCCESS', payload: result.data.stories });
     })
       .catch((err) => {
-      setIsError(true)
+      dispatch({type: 'STORIES_FETCH_FAILURE'})
     })
   
   }, [])
@@ -65,13 +94,10 @@ const App = () => {
     }
 
   const handleRemoveStory = (story) => {
-    console.log('TOdelete', story.objectID)
-    const newStory = stories.filter((s) => s.objectID !== story.objectID);
-    console.log('newStory', newStory)
-   dispatch({ type: "SET_STORIES", payload: filteredStories });
+      dispatch({ type: "REMOVE_STORY", payload: story });
   }
 
-    const filteredStories = stories.filter((story) =>
+    const filteredStories = stories.data.filter((story) =>
         story.title.toLowerCase().includes(searchTerm.toLowerCase()))
  
   return (
