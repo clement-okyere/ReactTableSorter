@@ -4,7 +4,6 @@ import Search from './Search'
 import useSemiPersistentState from './hooks/useSemipersistentState'
 
 
-
 const App = () => {
   const initialStories = [
     {
@@ -25,9 +24,17 @@ const App = () => {
     },
   ];
 
-
+  const storiesReducer = (state, action) => {
+    switch (action.type) {
+      case 'SET_STORIES':
+        return action.payload;
+      
+      default:
+        throw new Error();
+    }
+}
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [stories, setStories] = React.useState([])
+  const [stories, dispatch] = React.useReducer(storiesReducer ,[])
   const [isLoading, setIsLoading] = React.useState(false)
   const [isError, setIsError] = React.useState(false);
 
@@ -44,14 +51,15 @@ const App = () => {
     setIsLoading(true);
 
     getAsyncStories().then((result) => {
-      setStories(result.data.stories)
+      dispatch({type: 'SET_STORIES', payload: initialStories})
      setIsLoading(false);
     })
       .catch((err) => {
       setIsError(true)
     })
   
-  },[])
+  }, [])
+  
     const handleSearch = (event) => {
         setSearchTerm(event.target.value)
     }
@@ -60,7 +68,7 @@ const App = () => {
     console.log('TOdelete', story.objectID)
     const newStory = stories.filter((s) => s.objectID !== story.objectID);
     console.log('newStory', newStory)
-    setStories(newStory);
+   dispatch({ type: "SET_STORIES", payload: filteredStories });
   }
 
     const filteredStories = stories.filter((story) =>
