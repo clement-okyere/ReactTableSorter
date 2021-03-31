@@ -1,28 +1,13 @@
-import React, {Fragment} from "react";
+import React, { Fragment } from "react";
+import axios from 'axios';
 import List from './List'
-import Search from './Search'
+import SearchForm from './SearchForm'
+import styles from './App.module.css'
 import useSemiPersistentState from './hooks/useSemipersistentState'
 
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
 const App = () => {
-  const initialStories = [
-    {
-      title: "React",
-      url: "http://reactjs.org",
-      author: "Jordan Mike",
-      num_comments: 3,
-      points: 4,
-      objectID: 0,
-    },
-    {
-      title: "Redux",
-      url: "http://reactjs.org",
-      author: "Dan Abramov, Andrew Clark",
-      num_comments: 2,
-      points: 5,
-      objectID: 1,
-    },
-  ];
 
   const storiesReducer = (state, action) => {
     switch (action.type) {
@@ -61,6 +46,8 @@ const App = () => {
     }
 }
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
+
   const [stories, dispatch] = React.useReducer(
     storiesReducer,
     { data: [], isLoading: false, isError: false })
@@ -68,50 +55,60 @@ const App = () => {
   const [isLoading, setIsLoading] = React.useState(false)
   const [isError, setIsError] = React.useState(false);
 
-  const getAsyncStories = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { stories: initialStories } });
-      }, 2000);
-    })
-   
-  };
+  const handleFetchStories = React.useCallback(async () => {
+     if (!searchTerm) return;
+
+     dispatch({ type: "STORIES_FETCH_INIT" });
+     
+    try {
+      const result = await axios.get(url);
+      dispatch({
+        type: "STORIES_FETCH_SUCCESS",
+        payload: result.data.hits,
+      });
+    }
+    catch (err) {
+      dispatch({ type: "STORIES_FETCH_FAILURE" });
+    }
+  }, [url])
 
   React.useEffect(() => {
-   dispatch({type: 'STORIES_FETCH_INIT'})
-
-    getAsyncStories().then((result) => {
-      dispatch({ type: 'STORIES_FETCH_SUCCESS', payload: result.data.stories });
-    })
-      .catch((err) => {
-      dispatch({type: 'STORIES_FETCH_FAILURE'})
-    })
+    handleFetchStories()
+  }, [handleFetchStories])
   
-  }, [])
-  
-    const handleSearch = (event) => {
+    const handleSearchInput = (event) => {
         setSearchTerm(event.target.value)
-    }
+  }
+  
+  const handleSearchSubmit = (event) => {
+    console.log('submitted')
+    setUrl(`${API_ENDPOINT}${searchTerm}`)
+    event.preventDefault();
+  }
 
   const handleRemoveStory = (story) => {
       dispatch({ type: "REMOVE_STORY", payload: story });
   }
+ 
 
-    const filteredStories = stories.data.filter((story) =>
-        story.title.toLowerCase().includes(searchTerm.toLowerCase()))
  
   return (
-    <Fragment>
-      <h1>My hacker stories</h1>
-      <Search search={searchTerm} onSearch={handleSearch} />
-      <hr />
-      {isError && <p>Something Went Wrong</p>}
-      {isLoading ? (
+    <div className={styles.container}>
+      <h1 className={styles.headlinePrimary}>My hacker stories</h1>
+      {/* <Search search={searchTerm} onSearch={handleSearch} /> */}
+      <SearchForm
+        searchTerm={searchTerm}
+        onSearchInput={handleSearchInput}
+        onSearchSubmit={handleSearchSubmit}
+        />
+     
+      {stories.isError && <p>Something Went Wrong</p>}
+      {stories.isLoading ? (
         <p>....Loading</p>
       ) : (
-          <List stories={filteredStories} onRemoveItem={handleRemoveStory} />
+        <List stories={stories.data} onRemoveItem={handleRemoveStory} />
       )}
-    </Fragment>
+    </div>
   );
 };
 

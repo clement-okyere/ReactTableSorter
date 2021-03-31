@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react'
+import styles from './App.module.css'
 
 const InputWithLabel = ({ id,
     label,
@@ -16,12 +17,13 @@ const InputWithLabel = ({ id,
     }, [isFocused])
     return (
     <Fragment>
-        <label htmlFor="search">{children}</label>&nbsp;
+        <label htmlFor="search" className={styles.label}>{children}</label>&nbsp;
         <input id={id}
                 type={type}
                 ref={inputRef}
             value={value}
-            onChange={onInputChange}
+                onChange={onInputChange}
+                className={styles.input}
               />
     </Fragment>
     )

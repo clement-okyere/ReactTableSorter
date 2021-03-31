@@ -7,7 +7,7 @@ const useSemiPersistentState = (key, initialState) => {
 
   React.useEffect(() => {
     localStorage.setItem(key, value);
-  }, [setValue, key]);
+  }, [value, key]);
 
   return [value, setValue];
 };
