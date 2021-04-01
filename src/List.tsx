@@ -1,12 +1,17 @@
 import React from 'react'
 //import styles from './App.module.css'
 import styled from 'styled-components'
+import { Story } from "./types/types"
 
 const StyledItem = styled.div`
      display: flex;
      align-items: center;
      padding-bottom: 5px;
 `;
+
+type IStyleColumnProps = {
+  width?: number;
+}
 
 const StyledColumn = styled.span`
   padding: 0 5px;
@@ -19,7 +24,7 @@ const StyledColumn = styled.span`
     color; inherit;
   }
 
-  width: ${props => props.width}
+  width: ${(props:IStyleColumnProps) => props.width}
 `;
 
 const StyledButton = styled.button`
@@ -37,13 +42,27 @@ const StyledButton = styled.button`
 
 `;
 
-const List = ({stories, onRemoveItem}) => {
-    return(
-      stories.map((story) => (<Item key={story.objectID} item={story}
-        onRemoveItem={onRemoveItem} />)))
+type ListProps = {
+  stories: [Story],
+  onRemoveItem: (item: Story) => void;
 }
 
-const Item = ({item, onRemoveItem }) => {
+const List = ({ stories, onRemoveItem }: ListProps) => (
+  <div>
+   {
+    stories.map((story) => (
+      <Item key={story.objectID} item={story} onRemoveItem={onRemoveItem} />
+    ))
+    }
+    </div>
+)
+
+type ItemProps = {
+  item: Story;
+  onRemoveItem: (item: Story) => void;
+};
+
+const Item = ({item, onRemoveItem }: ItemProps) => {
   
   return (
     <StyledItem>

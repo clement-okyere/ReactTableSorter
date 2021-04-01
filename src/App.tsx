@@ -2,9 +2,9 @@ import React, { Fragment } from "react";
 import axios from 'axios';
 import List from './List'
 import SearchForm from './SearchForm'
-import styles from './App.module.css'
 import useSemiPersistentState from './hooks/useSemipersistentState'
 import styled from 'styled-components'
+import { Story } from './types/types'
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -23,10 +23,46 @@ const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
     letter-spacing: 2px;
   `;
 
+type StoriesState = {
+  data: [Story] | [],
+  isLoading: boolean,
+  isError: boolean
+}
 
-const App = () => {
 
-  const storiesReducer = (state, action) => {
+interface StoriesFetchInitAction {
+  type: 'STORIES_FETCH_INIT'
+}
+
+interface StoriesFetchSuccessAction {
+  type: "STORIES_FETCH_SUCCESS";
+  payload: [Story]
+}
+
+interface StoriesFetchFailureAction {
+  type: "STORIES_FETCH_FAILURE";
+}
+
+interface StoriesRemoveAction {
+  type: "REMOVE_STORY",
+  payload: Story
+}
+
+type StoriesAction =
+  | StoriesFetchSuccessAction
+  | StoriesFetchFailureAction
+  | StoriesRemoveAction
+  | StoriesFetchInitAction;
+
+
+const getSumComments = (stories: StoriesState) => {
+  //@ts-ignore
+  return stories.data.reduce((result, value) => {
+    return result + value.num_comments
+  }, 0);
+}
+
+  const storiesReducer = (state: StoriesState, action: StoriesAction) => {
     switch (action.type) {
       case "STORIES_FETCH_INIT":
         return {
@@ -46,7 +82,6 @@ const App = () => {
       case "STORIES_FETCH_FAILURE":
         return {
           ...state,
-          data: action.payload,
           isError: true,
           isLoading: false,
         };
@@ -54,34 +89,42 @@ const App = () => {
       case "REMOVE_STORY":
         return {
           ...state,
-          data: state.data.filter((s) => s.objectID !== action.payload.objectID)
-        }
+          data: state.data.filter(
+            (s: Story) => s.objectID !== action.payload.objectID
+          ),
+        };
 
       default:
-        console.log("action.type", action.type);
         throw new Error();
     }
-}
+  };
+
+const App = () => {
+
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
   const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
 
   const [stories, dispatch] = React.useReducer(
+    // @ts-ignore
     storiesReducer,
-    { data: [], isLoading: false, isError: false })
+    { data: [], isLoading: false, isError: false }
+  );
   
   const handleFetchStories = React.useCallback(async () => {
-     if (!searchTerm) return;
+    if (!searchTerm) return;
+    // @ts-ignore
+    dispatch({ type: "STORIES_FETCH_INIT" });
 
-     dispatch({ type: "STORIES_FETCH_INIT" });
-     
     try {
       const result = await axios.get(url);
+
+      // @ts-ignore
       dispatch({
         type: "STORIES_FETCH_SUCCESS",
         payload: result.data.hits,
       });
-    }
-    catch (err) {
+    } catch (err) {
+      // @ts-ignore
       dispatch({ type: "STORIES_FETCH_FAILURE" });
     }
   }, [url])
@@ -90,25 +133,28 @@ const App = () => {
     handleFetchStories()
   }, [handleFetchStories])
   
-    const handleSearchInput = (event) => {
+    const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value)
   }
   
-  const handleSearchSubmit = (event) => {
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     console.log('submitted')
     setUrl(`${API_ENDPOINT}${searchTerm}`)
     event.preventDefault();
   }
 
-  const handleRemoveStory = (story) => {
-      dispatch({ type: "REMOVE_STORY", payload: story });
+  const handleRemoveStory = (story: Story) => {
+    // @ts-ignore
+    dispatch({ type: "REMOVE_STORY", payload: story });
   }
  
-
+  const sumCommnents = React.useMemo(() => getSumComments(stories),
+    [stories]
+  )
  
   return (
     <StyledContainer>
-      <StyledHeadlinePrimary>My hacker stories</StyledHeadlinePrimary>
+      <StyledHeadlinePrimary>My hacker stories with {sumCommnents}</StyledHeadlinePrimary>
       {/* <Search search={searchTerm} onSearch={handleSearch} /> */}
       <SearchForm
         searchTerm={searchTerm}
@@ -120,15 +166,18 @@ const App = () => {
       {stories.isLoading ? (
         <p>....Loading</p>
       ) : (
-        <List stories={stories.data} onRemoveItem={handleRemoveStory} />
+          <>
+            <List stories={stories.data} onRemoveItem={handleRemoveStory} />
+          </>
       )}
     </StyledContainer>
   );
 };
 
-
-
-
-
-
 export default App;
+
+
+
+
+
+

@@ -15,14 +15,22 @@ const StyledInput = styled.input`
   font-size: 24px;
 `;
 
+type IInputLabelProps = {
+  id: string;
+  value: string;
+  type?: string;
+  isFocused?: boolean;
+  children: React.ReactNode;
+  onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+}
+
 const InputWithLabel = ({ id,
-    label,
     onInputChange,
     value,
     type = "text",
     isFocused,
-    children }) => {
-    const inputRef = React.useRef();
+    children }: IInputLabelProps) => {
+    const inputRef = React.useRef<HTMLInputElement>(null!);
 
     React.useEffect(() => {
         if (isFocused && inputRef.current) {

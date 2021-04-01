@@ -8,11 +8,17 @@ import styled from "styled-components"
    align-items: baseline;
   `;
 
+type ISearchFormProps = {
+  searchTerm: string;
+  onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearchSubmit: (event: React.FormEvent<HTMLFormElement>) => void
+}
+
 const SearchForm = ({
         searchTerm,
         onSearchInput,
         onSearchSubmit
-}) => {
+}: ISearchFormProps) => {
     return (
       <StyledSearchForm onSubmit={onSearchSubmit} >
         <InputWithLabel
