@@ -4,8 +4,25 @@ import List from './List'
 import SearchForm from './SearchForm'
 import styles from './App.module.css'
 import useSemiPersistentState from './hooks/useSemipersistentState'
+import styled from 'styled-components'
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
+
+  const StyledContainer = styled.div`
+    height: 100vw;
+    padding: 20px;
+
+    background: #83a4d4;
+    background: linear-gradient(to left, #b6fbff, #83a4d4);
+    color: #171212;
+  `;
+
+  const StyledHeadlinePrimary = styled.h1`
+    font-size: 48px;
+    font-weight: 300;
+    letter-spacing: 2px;
+  `;
+
 
 const App = () => {
 
@@ -52,9 +69,6 @@ const App = () => {
     storiesReducer,
     { data: [], isLoading: false, isError: false })
   
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isError, setIsError] = React.useState(false);
-
   const handleFetchStories = React.useCallback(async () => {
      if (!searchTerm) return;
 
@@ -93,22 +107,22 @@ const App = () => {
 
  
   return (
-    <div className={styles.container}>
-      <h1 className={styles.headlinePrimary}>My hacker stories</h1>
+    <StyledContainer>
+      <StyledHeadlinePrimary>My hacker stories</StyledHeadlinePrimary>
       {/* <Search search={searchTerm} onSearch={handleSearch} /> */}
       <SearchForm
         searchTerm={searchTerm}
         onSearchInput={handleSearchInput}
         onSearchSubmit={handleSearchSubmit}
-        />
-     
+      />
+
       {stories.isError && <p>Something Went Wrong</p>}
       {stories.isLoading ? (
         <p>....Loading</p>
       ) : (
         <List stories={stories.data} onRemoveItem={handleRemoveStory} />
       )}
-    </div>
+    </StyledContainer>
   );
 };
 

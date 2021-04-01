@@ -1,5 +1,19 @@
 import React, { Fragment } from 'react'
-import styles from './App.module.css'
+import styled from 'styled-components'
+
+const StyledLabel = styled.label`
+  border-top: 1px solid #171212;
+  border-left: 1px solid #171212;
+  padding-left: 5px;
+  font-size: 24px;
+`;
+
+const StyledInput = styled.input`
+  border: none;
+  border-bottom: 1px solid #171212;
+  background-color: transparent;
+  font-size: 24px;
+`;
 
 const InputWithLabel = ({ id,
     label,
@@ -17,13 +31,12 @@ const InputWithLabel = ({ id,
     }, [isFocused])
     return (
     <Fragment>
-        <label htmlFor="search" className={styles.label}>{children}</label>&nbsp;
-        <input id={id}
+        <StyledLabel htmlFor="search" >{children}</StyledLabel>&nbsp;
+        <StyledInput id={id}
                 type={type}
                 ref={inputRef}
-            value={value}
+                value={value}
                 onChange={onInputChange}
-                className={styles.input}
               />
     </Fragment>
     )
