@@ -5,8 +5,16 @@ import { SearchForm } from './SearchForm'
 import useSemiPersistentState from './hooks/useSemipersistentState'
 import styled from 'styled-components'
 import { Story } from './types/types'
+import LastSearches from './LastSearches'
 
-const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
+const API_BASE = 'https://hn.algolia.com/api/v1';
+const API_SEARCH = '/search'
+const PARAM_SEARCH = 'query='
+const PARAM_PAGE = 'page='
+
+
+const getUrl = (searchTerm: string, page: number) =>
+           `${API_BASE}${API_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`;
 
   const StyledContainer = styled.div`
     height: 100vw;
@@ -25,6 +33,7 @@ const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
 type StoriesState = {
   data: Story[],
+  page: number;
   isLoading: boolean,
   isError: boolean
 }
@@ -36,7 +45,10 @@ interface StoriesFetchInitAction {
 
 interface StoriesFetchSuccessAction {
   type: "STORIES_FETCH_SUCCESS";
-  payload: Story[]
+  payload: {
+    hits: Story[],
+    page: number;
+  }
 }
 
 interface StoriesFetchFailureAction {
@@ -74,7 +86,10 @@ const getSumComments = (stories: StoriesState) => {
       case "STORIES_FETCH_SUCCESS":
         return {
           ...state,
-          data: action.payload,
+          data: action.payload.page === 0
+            ? action.payload.hits
+            : state.data.concat(action.payload.hits),
+          page: action.payload.page,
           isError: false,
           isLoading: false,
         };
@@ -97,17 +112,45 @@ const getSumComments = (stories: StoriesState) => {
       default:
         throw new Error();
     }
-  };
+};
+  
+const extractSearchTerm = (url: string) =>
+  url.substring(url.lastIndexOf('?') + 1, url.lastIndexOf('&'))
+    .replace(PARAM_SEARCH, '')
+   
+const getLastSearches = (urls: string[]) => 
+  //@ts-ignore
+  urls.reduce((result, url, index) => {
+    const searchTerm = extractSearchTerm(url);
+
+    if (index === 0) {
+      //@ts-ignore
+      return result.concat(searchTerm);
+    }
+
+    const previousSearchTerm = result[result.length - 1]
+    if (searchTerm === previousSearchTerm) {
+      return result;
+    }
+    else {
+      //@ts-ignore
+      return result.concat(searchTerm);
+    }
+   }, [])
+  .slice(-6)
+  .slice(0, -1)
+
 
 const App = () => {
 
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
+  const [urls, setUrls] = React.useState<string[]>([getUrl(searchTerm, 0)])
 
+  
   const [stories, dispatch] = React.useReducer(
     // @ts-ignore
     storiesReducer,
-    { data: [], isLoading: false, isError: false }
+    { data: [], page: 0, isLoading: false, isError: false }
   );
   
   const handleFetchStories = React.useCallback(async () => {
@@ -116,18 +159,22 @@ const App = () => {
     dispatch({ type: "STORIES_FETCH_INIT" });
 
     try {
-      const result = await axios.get(url);
+      const lastUrl = urls[urls.length - 1]
+      const result = await axios.get(lastUrl);
 
       // @ts-ignore
       dispatch({
         type: "STORIES_FETCH_SUCCESS",
-        payload: result.data.hits,
+        payload: {
+          hits: result.data.hits,
+          page: result.data.page
+        }
       });
     } catch (err) {
       // @ts-ignore
       dispatch({ type: "STORIES_FETCH_FAILURE" });
     }
-  }, [url])
+  }, [urls])
 
   React.useEffect(() => {
     handleFetchStories()
@@ -138,10 +185,28 @@ const App = () => {
   }
   
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    console.log('submitted')
-    setUrl(`${API_ENDPOINT}${searchTerm}`)
+   handleSearch(searchTerm, 0)
     event.preventDefault();
   }
+
+  const handleLastSearch = (searchTerm: string) => {
+    setSearchTerm(searchTerm)
+     handleSearch(searchTerm, 0)
+  };
+  
+  const handleSearch = (searchTerm: string, page: number) => {
+    const url = getUrl(searchTerm, page);
+    setUrls(urls.concat(url))
+  }
+
+  const handleMore = () => {
+    const lastUrl = urls[urls.length - 1];
+    const searchTerm = extractSearchTerm(lastUrl)
+    handleSearch(searchTerm, stories.page + 1)
+  }
+
+
+
 
   const handleRemoveStory = (story: Story) => {
     // @ts-ignore
@@ -151,10 +216,15 @@ const App = () => {
   const sumCommnents = React.useMemo(() => getSumComments(stories),
     [stories]
   )
+
+
+  const lastSearches = getLastSearches(urls);
  
   return (
     <StyledContainer>
-      <StyledHeadlinePrimary>My hacker stories with {sumCommnents}</StyledHeadlinePrimary>
+      <StyledHeadlinePrimary>
+        My hacker stories with {sumCommnents}
+      </StyledHeadlinePrimary>
       {/* <Search search={searchTerm} onSearch={handleSearch} /> */}
       <SearchForm
         searchTerm={searchTerm}
@@ -162,13 +232,17 @@ const App = () => {
         onSearchSubmit={handleSearchSubmit}
       />
 
+      <LastSearches urls={lastSearches} onLastSearch={handleLastSearch} />
+      <List stories={stories.data} onRemoveItem={handleRemoveStory} />
       {stories.isError && <p>Something Went Wrong</p>}
       {stories.isLoading ? (
         <p>....Loading</p>
       ) : (
-          <>
-            <List stories={stories.data} onRemoveItem={handleRemoveStory} />
-          </>
+        <>
+          <button type="button" onClick={handleMore}>
+            More
+          </button>
+        </>
       )}
     </StyledContainer>
   );

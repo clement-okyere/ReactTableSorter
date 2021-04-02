@@ -2,6 +2,7 @@ import React from 'react'
 //import styles from './App.module.css'
 import styled from 'styled-components'
 import { Story } from "../types/types"
+import { sortBy } from 'lodash';
 
 const StyledItem = styled.div`
      display: flex;
@@ -47,15 +48,70 @@ export type ListProps = {
   onRemoveItem: (item: Story) => void;
 }
 
-export const List = ({ stories, onRemoveItem }: ListProps) => (
-  <div>
-   {
-    stories.map((story) => (
-      <Item key={story.objectID} item={story} onRemoveItem={onRemoveItem} />
-    ))
-    }
-    </div>
-)
+interface stringMap {
+  [key: string]: any;
+}
+
+const SORTS: stringMap = {
+  NONE: (list: Story[]) => list,
+  TITLE: (list: Story[]) => sortBy(list, "title"),
+  AUTHOR: (list: Story[]) => sortBy(list, "author"),
+  COMMENT: (list: Story[]) => sortBy(list, "num_comments").reverse(),
+  POINT: (list: Story[]) => sortBy(list, "points").reverse(),
+};
+
+export const List = ({ stories, onRemoveItem }: ListProps) => {
+  const [sort, setSort] = React.useState<{ sortKey: string; isReverse: boolean}>({
+    sortKey: 'NONE',
+    isReverse: false
+  });
+
+  const sortFunction = SORTS[sort.sortKey];
+  const sortedList: Story[] = sort.isReverse 
+    ? sortFunction(stories).reverse()
+    : sortFunction(stories)
+    
+
+  const handleSort = (sortKey: string) => {
+    const isReverse = sort.sortKey === sortKey && !sort.isReverse;
+    setSort({
+      ...sort,
+      sortKey,
+      isReverse
+    })
+  }
+
+ return (
+   <div>
+     <div style={{ display: "flex" }}>
+       <span style={{ width: "40%" }}>
+         <button type="button" onClick={() => handleSort("TITLE")}>
+           Title
+         </button>
+       </span>
+       <span style={{ width: "30%" }}>
+         <button type="button" onClick={() => handleSort("AUTHOR")}>
+           Author
+         </button>
+       </span>
+       <span style={{ width: "10%" }}>
+         <button type="button" onClick={() => handleSort("COMMENT")}>
+           Comment
+         </button>
+       </span>
+       <span style={{ width: "10%" }}>
+         <button type="button" onClick={() => handleSort("POINT")}>
+           Points
+         </button>
+       </span>
+     </div>
+
+     {sortedList.map((story) => (
+       <Item key={story.objectID} item={story} onRemoveItem={onRemoveItem} />
+     ))}
+   </div>
+ );
+}
 
 export type ItemProps = {
   item: Story;
