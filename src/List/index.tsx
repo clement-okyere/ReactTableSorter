@@ -1,7 +1,7 @@
 import React from 'react'
 //import styles from './App.module.css'
 import styled from 'styled-components'
-import { Story } from "./types/types"
+import { Story } from "../types/types"
 
 const StyledItem = styled.div`
      display: flex;

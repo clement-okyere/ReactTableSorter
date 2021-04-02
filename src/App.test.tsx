@@ -112,7 +112,7 @@ describe('SearchForm', () => {
      it("it submits the form", () => {
        const pseudoEvent = { };
 
-       component.root.findByType("form").props.onChange(pseudoEvent);
+       component.root.findByType("form").props.onSubmit(pseudoEvent);
        expect(searchFormProps.onSearchSubmit).toHaveBeenCalledTimes(1);
        // expect(searchFormProps.onSearchInput).toHaveBeenNthCalledWith(pseudoEvent)
      });
