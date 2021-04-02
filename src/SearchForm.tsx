@@ -8,13 +8,13 @@ import styled from "styled-components"
    align-items: baseline;
   `;
 
-type ISearchFormProps = {
+export type ISearchFormProps = {
   searchTerm: string;
   onSearchInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSearchSubmit: (event: React.FormEvent<HTMLFormElement>) => void
 }
 
-const SearchForm = ({
+export const SearchForm = ({
         searchTerm,
         onSearchInput,
         onSearchSubmit

@@ -42,12 +42,12 @@ const StyledButton = styled.button`
 
 `;
 
-type ListProps = {
-  stories: [Story],
+export type ListProps = {
+  stories: Story[],
   onRemoveItem: (item: Story) => void;
 }
 
-const List = ({ stories, onRemoveItem }: ListProps) => (
+export const List = ({ stories, onRemoveItem }: ListProps) => (
   <div>
    {
     stories.map((story) => (
@@ -57,12 +57,12 @@ const List = ({ stories, onRemoveItem }: ListProps) => (
     </div>
 )
 
-type ItemProps = {
+export type ItemProps = {
   item: Story;
-  onRemoveItem: (item: Story) => void;
+  onRemoveItem?: (item: Story) => void;
 };
 
-const Item = ({item, onRemoveItem }: ItemProps) => {
+export const Item = ({item, onRemoveItem }: ItemProps) => {
   
   return (
     <StyledItem>
@@ -75,6 +75,7 @@ const Item = ({item, onRemoveItem }: ItemProps) => {
       <StyledButton
         style={{ width: "10%" }}
         type="button"
+        //@ts-ignore
         onClick={() => onRemoveItem(item)}
         //className={`${styles.button} ${styles.buttonSmall}`}
       >
@@ -83,5 +84,4 @@ const Item = ({item, onRemoveItem }: ItemProps) => {
     </StyledItem>
   );
 }
-    
-export default List;
+  

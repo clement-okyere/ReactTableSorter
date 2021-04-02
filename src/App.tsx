@@ -1,7 +1,7 @@
 import React, { Fragment } from "react";
 import axios from 'axios';
-import List from './List'
-import SearchForm from './SearchForm'
+import { List } from './List'
+import { SearchForm } from './SearchForm'
 import useSemiPersistentState from './hooks/useSemipersistentState'
 import styled from 'styled-components'
 import { Story } from './types/types'
@@ -24,7 +24,7 @@ const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
   `;
 
 type StoriesState = {
-  data: [Story] | [],
+  data: Story[],
   isLoading: boolean,
   isError: boolean
 }
@@ -36,7 +36,7 @@ interface StoriesFetchInitAction {
 
 interface StoriesFetchSuccessAction {
   type: "STORIES_FETCH_SUCCESS";
-  payload: [Story]
+  payload: Story[]
 }
 
 interface StoriesFetchFailureAction {

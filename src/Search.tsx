@@ -2,11 +2,12 @@ import React from 'react';
 import InputWithLabel from './InputWithLabel'
 
 
-type ISearchProps = {
+export type ISearchProps = {
   search: string;
   onSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
-const Search = ({
+
+export const Search = ({
       onSearch,
       search
     }: ISearchProps) => {
@@ -33,5 +34,3 @@ const Search = ({
     </>
   );
 };
-
-export default Search;
